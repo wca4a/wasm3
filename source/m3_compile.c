@@ -2719,11 +2719,23 @@ M3Result  ReserveConstants  (IM3Compilation o)
 }
 
 
+// like the allocator setters, the hook is process-wide and not synchronized
+static void (* s_compileHook) (IM3Function, uint32_t) = NULL;
+
+void  m3_SetCompileHook  (void (* i_hook) (IM3Function, uint32_t))
+{
+    s_compileHook = i_hook;
+}
+
 M3Result  CompileFunction  (IM3Function io_function)
 {
     M3Result result = m3Err_none;
 
     if (!io_function->wasm) return "function body is missing";
+
+    // the layout of compiled code depends on the order functions are compiled in:
+    // let the embedder see that order, so that it can reproduce the layout
+    if (s_compileHook) s_compileHook (io_function, (uint32_t) (io_function - io_function->module->functions));
 
     IM3FuncType funcType = io_function->funcType;                   m3log (compile, "compiling: [%d] %s %s; wasm-size: %d",
                                                                         io_function->index, m3_GetFunctionName (io_function), SPrintFuncTypeSignature (funcType), (u32) (io_function->wasmEnd - io_function->wasm));

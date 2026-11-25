@@ -263,6 +263,13 @@ d_m3ErrorConst  (SuspensionError,               "error during suspension")
     // Optional, compiles all functions in the module
     M3Result            m3_CompileModule            (IM3Module io_module);
 
+    // i_hook is called at the start of every function compilation, including the lazy
+    // ones that happen on a function's first call, with the function and its index in
+    // its module (stable across runs, unlike the handle). pass NULL to remove it.
+    // the hook is process-wide and not synchronized, like m3_SetAllocators: set it
+    // from the thread that compiles, before compiling
+    void                m3_SetCompileHook           (void (* i_hook)(IM3Function, uint32_t i_index));
+
     // Calling m3_RunStart is optional
     M3Result            m3_RunStart                 (IM3Module i_module);
 
